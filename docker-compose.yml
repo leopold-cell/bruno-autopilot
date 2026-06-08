@@ -1,0 +1,70 @@
+# Runs as an isolated stack alongside the Velluto autopilot on the same VPS.
+# Start with a distinct project name so nothing collides:
+#   docker compose -p bruno up -d --build
+# Host ports are remapped (5433/6380/8001) to avoid clashing with Velluto.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bruno_autopilot
+      POSTGRES_USER: bruno
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bruno}
+    volumes:
+      - bruno_pg_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bruno"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - bruno_redis_data:/data
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://bruno:${POSTGRES_PASSWORD:-bruno}@db:5432/bruno_autopilot
+      REDIS_URL: redis://redis:6379/0
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8001:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  scheduler:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://bruno:${POSTGRES_PASSWORD:-bruno}@db:5432/bruno_autopilot
+      REDIS_URL: redis://redis:6379/0
+    command: python -m app.orchestrator.scheduler
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  bruno_pg_data:
+  bruno_redis_data:
