@@ -37,7 +37,7 @@ class Settings(BaseSettings):
 
     # Brand / market
     brand_name: str = "Bruno"
-    site_url: str = "https://bruno.ai"
+    site_url: str = "https://brunomind.com"
     target_market: str = "US"
     # Themes the keyword researcher expands into problem-based queries.
     seed_themes: list[str] = [
