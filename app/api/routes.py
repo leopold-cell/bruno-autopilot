@@ -33,6 +33,18 @@ async def research(target: int | None = None):
     return await research_and_queue(target)
 
 
+@router.post("/announce")
+async def announce(slug: str):
+    """Send the email-list announcement for an existing post (test / re-send)."""
+    from app.modules.email.mailerlite import announce_post
+    from app.modules.publisher.supabase_client import fetch_post
+
+    post = await fetch_post(slug)
+    if not post:
+        return {"sent": False, "reason": f"post not found: {slug}"}
+    return await announce_post(post)
+
+
 @router.get("/dashboard")
 async def dashboard():
     async with AsyncSessionLocal() as db:

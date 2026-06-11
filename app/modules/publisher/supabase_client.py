@@ -50,6 +50,23 @@ async def fetch_published_slugs() -> set[str]:
         return set()
 
 
+async def fetch_post(slug: str) -> dict[str, Any] | None:
+    """Fetch a single published post by slug (for re-announcing/testing)."""
+    async with httpx.AsyncClient(timeout=15) as http:
+        r = await http.get(
+            f"{_base()}/blog_posts",
+            params={
+                "select": "slug,title,excerpt,category,tldr",
+                "slug": f"eq.{slug}",
+                "limit": "1",
+            },
+            headers=_headers(),
+        )
+        r.raise_for_status()
+        rows = r.json()
+        return rows[0] if rows else None
+
+
 async def publish_post(post: dict[str, Any]) -> dict[str, Any]:
     """Upsert one post (idempotent on slug) and mark it published."""
     row = {
