@@ -4,10 +4,11 @@ from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Load .env manually first so pydantic-settings inherits from os.environ.
+# Load a local .env if present, but do NOT override real environment variables
+# (e.g. those injected by docker-compose env_file/environment) — those must win.
 from dotenv import load_dotenv
 
-load_dotenv(override=True)
+load_dotenv(override=False)
 
 
 class Settings(BaseSettings):
