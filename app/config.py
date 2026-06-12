@@ -50,6 +50,18 @@ class Settings(BaseSettings):
     weekly_digest_day: str = "sun"  # cron day_of_week (mon..sun)
     weekly_digest_time: str = "09:00"  # HH:MM in publish_timezone
 
+    # Instagram Reels auto-publishing (official Graph API)
+    instagram_publish_enabled: bool = True
+    ig_user_id: str = ""  # Instagram Business Account ID
+    meta_graph_token: str = ""  # long-lived access token
+    meta_graph_version: str = "v21.0"
+    reels_per_day: int = 1
+    reels_time: str = "12:00"  # HH:MM in publish_timezone
+
+    # ElevenLabs (voiceover for reels)
+    elevenlabs_api_key: str = ""
+    elevenlabs_voice_id: str = "EXAVITQu4vr4xnSDxMaL"  # calm default voice
+
     # Brand / market
     brand_name: str = "Bruno"
     site_url: str = "https://brunomind.com"
