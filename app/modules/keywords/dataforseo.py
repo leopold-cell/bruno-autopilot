@@ -100,7 +100,8 @@ async def fetch_keywords(avoid: set[str], per_seed: int = 40, cap: int = 40) -> 
             continue
         for it in items:
             kw = it["keyword"]
-            if not kw or kw in seen or kw in avoid or not _is_problem_based(kw):
+            # skip dupes, already-covered, non-problem, and malformed (stray periods)
+            if not kw or kw in seen or kw in avoid or "." in kw or not _is_problem_based(kw):
                 continue
             seen.add(kw)
             results.append(
