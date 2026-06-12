@@ -36,12 +36,14 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_service_role_key: str = ""
 
-    # MailerLite — announce each new post to the email list.
+    # MailerLite — weekly digest (best post of the week) to the email list.
     mailerlite_api_key: str = ""
     mailerlite_group_id: str = ""
     mailerlite_from_email: str = "hi@brunomind.com"
     mailerlite_from_name: str = "Bruno"
-    announce_new_posts: bool = True
+    weekly_digest_enabled: bool = True
+    weekly_digest_day: str = "sun"  # cron day_of_week (mon..sun)
+    weekly_digest_time: str = "09:00"  # HH:MM in publish_timezone
 
     # Brand / market
     brand_name: str = "Bruno"

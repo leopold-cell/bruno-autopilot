@@ -35,7 +35,7 @@ async def research(target: int | None = None):
 
 @router.post("/announce")
 async def announce(slug: str):
-    """Send the email-list announcement for an existing post (test / re-send)."""
+    """Send a single post to the email list now (test / re-send)."""
     from app.modules.email.mailerlite import announce_post
     from app.modules.publisher.supabase_client import fetch_post
 
@@ -43,6 +43,14 @@ async def announce(slug: str):
     if not post:
         return {"sent": False, "reason": f"post not found: {slug}"}
     return await announce_post(post)
+
+
+@router.post("/weekly")
+async def weekly():
+    """Run the weekly digest now: pick the best post of the week + email the list."""
+    from app.modules.email.weekly import run_weekly_digest
+
+    return await run_weekly_digest()
 
 
 @router.get("/dashboard")

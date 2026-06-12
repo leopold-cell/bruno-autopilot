@@ -41,6 +41,17 @@ async def job_keyword_refresh():
         log.error("scheduler.job_failed", job="keyword_refresh", error=str(e))
 
 
+async def job_weekly_digest():
+    from app.modules.email.weekly import run_weekly_digest
+
+    log.info("scheduler.job_start", job="weekly_digest")
+    try:
+        result = await run_weekly_digest()
+        log.info("scheduler.job_done", job="weekly_digest", featured=result.get("featured"), sent=result.get("sent"))
+    except Exception as e:  # noqa: BLE001
+        log.error("scheduler.job_failed", job="weekly_digest", error=str(e))
+
+
 def build_scheduler() -> AsyncIOScheduler:
     tz = settings.publish_timezone
     hour, minute = settings.publish_time.split(":")
@@ -56,6 +67,13 @@ def build_scheduler() -> AsyncIOScheduler:
         CronTrigger(day_of_week="mon", hour=4, minute=0, timezone=tz),
         id="weekly_keyword_refresh",
     )
+    if settings.weekly_digest_enabled:
+        wh, wm = settings.weekly_digest_time.split(":")
+        scheduler.add_job(
+            job_weekly_digest,
+            CronTrigger(day_of_week=settings.weekly_digest_day, hour=int(wh), minute=int(wm), timezone=tz),
+            id="weekly_digest",
+        )
     return scheduler
 
 

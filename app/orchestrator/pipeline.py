@@ -78,18 +78,8 @@ async def _publish_one() -> dict:
             await _finish(kw_data["id"], "queued", str(e)[:500], run, "failed_publish")
             return {"status": "error", "reason": "publish failed", "slug": post["slug"]}
 
-        # Announce the new post to the email list (best-effort; never blocks).
-        from app.modules.email.mailerlite import announce_post
-
-        announced = await announce_post(post)
-
         await _finish(kw_data["id"], "published", None, run, "success", slug=post["slug"])
-        return {
-            "status": "published",
-            "slug": post["slug"],
-            "keyword": kw_data["keyword"],
-            "announced": announced.get("sent", False),
-        }
+        return {"status": "published", "slug": post["slug"], "keyword": kw_data["keyword"]}
 
     return {"status": "skipped", "reason": f"no keyword passed QA in {MAX_CANDIDATES_PER_POST} tries"}
 

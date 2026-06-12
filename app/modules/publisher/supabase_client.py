@@ -50,6 +50,26 @@ async def fetch_published_slugs() -> set[str]:
         return set()
 
 
+async def fetch_recent_posts(days: int = 7) -> list[dict[str, Any]]:
+    """Published posts from the last `days` days (for the weekly digest)."""
+    from datetime import datetime, timedelta, timezone
+
+    since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    async with httpx.AsyncClient(timeout=15) as http:
+        r = await http.get(
+            f"{_base()}/blog_posts",
+            params={
+                "select": "slug,title,excerpt,category,tldr,published_at",
+                "status": "eq.published",
+                "published_at": f"gte.{since}",
+                "order": "published_at.desc",
+            },
+            headers=_headers(),
+        )
+        r.raise_for_status()
+        return r.json()
+
+
 async def fetch_post(slug: str) -> dict[str, Any] | None:
     """Fetch a single published post by slug (for re-announcing/testing)."""
     async with httpx.AsyncClient(timeout=15) as http:
