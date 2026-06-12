@@ -92,17 +92,28 @@ async def research_and_queue(target: int | None = None) -> dict:
     # Slugs are a rough proxy for covered keywords; fold them into the avoid set.
     avoid = existing_kw | {s.replace("-", " ") for s in covered_slugs}
 
-    ideas = await generate_keyword_ideas(avoid, target)
+    # Prefer real DataForSEO keyword data (volume + difficulty) when configured;
+    # otherwise fall back to Claude ideation.
+    source = "ideation"
+    ideas: list[dict] = []
+    if settings.dataforseo_login and settings.dataforseo_password:
+        from app.modules.keywords.dataforseo import fetch_keywords as dfs_fetch
+
+        ideas = await dfs_fetch(avoid)
+        source = "dataforseo"
+    if not ideas:
+        ideas = await generate_keyword_ideas(avoid, target)
+        source = "ideation"
 
     inserted = 0
     async with AsyncSessionLocal() as db:
         for idea in ideas:
             if idea["keyword"] in existing_kw:
                 continue
-            db.add(Keyword(source="ideation", **idea))
+            db.add(Keyword(source=source, **idea))
             existing_kw.add(idea["keyword"])
             inserted += 1
         await db.commit()
 
-    log.info("keywords.research_done", generated=len(ideas), inserted=inserted)
-    return {"generated": len(ideas), "inserted": inserted}
+    log.info("keywords.research_done", source=source, generated=len(ideas), inserted=inserted)
+    return {"source": source, "generated": len(ideas), "inserted": inserted}

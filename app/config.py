@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_service_role_key: str = ""
 
+    # DataForSEO (real keyword volume + difficulty, USA). Optional — when unset,
+    # keyword research falls back to Claude ideation.
+    dataforseo_login: str = ""
+    dataforseo_password: str = ""
+
     # MailerLite — weekly digest (best post of the week) to the email list.
     mailerlite_api_key: str = ""
     mailerlite_group_id: str = ""
